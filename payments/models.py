@@ -11,8 +11,8 @@ class Payment(models.Model):
         PAYMENT = "Payment"
         FINE = "Fine"
 
-    status = models.CharField(choices=StatusChoices.choices, default="PENDING")
-    type = models.CharField(choices=TypeChoices.choices, default="PAYMENT")
+    status = models.CharField(choices=StatusChoices.choices, default="PENDING", max_length=255)
+    type = models.CharField(choices=TypeChoices.choices, default="PAYMENT", max_length=255)
     session_url = models.URLField(max_length=400)
     session_id = models.CharField(max_length=255)
     money_to_pay = models.DecimalField(
