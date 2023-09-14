@@ -1,6 +1,8 @@
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from borrowings.models import Borrowing
+
 
 class Payment(models.Model):
     class StatusChoices(models.TextChoices):
@@ -16,6 +18,9 @@ class Payment(models.Model):
     )
     type = models.CharField(
         choices=TypeChoices.choices, default="PAYMENT", max_length=255
+    )
+    borrowing = models.ForeignKey(
+        Borrowing, on_delete=models.CASCADE, related_name="payments"
     )
     session_url = models.URLField(max_length=400)
     session_id = models.CharField(max_length=255)
