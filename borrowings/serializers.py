@@ -58,7 +58,33 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
 class BorrowingDetailSerializer(BorrowingCreateSerializer):
     user = serializers.StringRelatedField(many=False, read_only=True)
     book = serializers.StringRelatedField(many=False, read_only=True)
+    payments = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Borrowing
-        fields = ("id", "expected_return_date", "actual_return_date", "book", "user")
+        fields = (
+            "id",
+            "expected_return_date",
+            "actual_return_date",
+            "book",
+            "user",
+            "payments",
+        )
+        read_only_fields = ("id", "payments")
+
+
+class BorrowingReturnSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Borrowing
+        fields = (
+            "id",
+            "borrow_date",
+            "expected_return_date",
+            "actual_return_date",
+        )
+        read_only_fields = ("id", "borrow_date", "expected_return_date")
+
+    def validate(self, attrs) -> dict:
+        if self.instance.actual_return_date is not None:
+            raise ValidationError(detail="Borrowing has been already returned.")
+        return super().validate(attrs=attrs)
