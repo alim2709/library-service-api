@@ -4,7 +4,7 @@ from rest_framework.exceptions import ValidationError
 
 from borrowings.models import Borrowing
 from payments.models import Payment
-from payments.stripe_session import create_stripe_session
+from payments.stripe_session import create_stripe_session_and_payment
 
 
 class BorrowingSerializer(serializers.ModelSerializer):
@@ -49,7 +49,7 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
         book.inventory -= 1
         book.save()
 
-        create_stripe_session(
+        create_stripe_session_and_payment(
             borrowing, request=self.context["request"], payment_type="Payment"
         )
         return borrowing
