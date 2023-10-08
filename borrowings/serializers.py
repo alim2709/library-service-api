@@ -3,6 +3,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from borrowings.models import Borrowing
+from borrowings.notifications import send_telegram_notification
+from borrowings.utils import get_borrowing_info
 from payments.models import Payment
 from payments.stripe_session import create_stripe_session_and_payment
 
@@ -52,6 +54,9 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
         create_stripe_session_and_payment(
             borrowing, request=self.context["request"], payment_type="Payment"
         )
+        message = "New borrowing created:\n" + get_borrowing_info(borrowing)
+        send_telegram_notification(message)
+
         return borrowing
 
 
