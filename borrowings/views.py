@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import stripe
 from django.db import transaction
 from rest_framework import mixins
 from rest_framework.decorators import action
@@ -13,7 +14,8 @@ from borrowings.serializers import (
     BorrowingReturnSerializer,
     BorrowingSerializer,
 )
-from payments.stripe_session import create_stripe_session
+from payments.models import Payment
+from payments.stripe_session import create_stripe_session_and_payment
 
 
 class BorrowingViewSet(
@@ -82,7 +84,7 @@ class BorrowingViewSet(
         book.save()
         if actual_return_date > expected_return_date:
             overdue_period = (actual_return_date - borrowing.expected_return_date).days
-            session = create_stripe_session(
+            session = create_stripe_session_and_payment(
                 borrowing,
                 self.request,
                 payment_type="Fine",
@@ -94,3 +96,25 @@ class BorrowingViewSet(
             }
             return Response(info)
         return Response({"status": "borrowing returned"})
+
+    @transaction.atomic
+    @action(
+        methods=["POST"],
+        detail=True,
+        url_path="update_session_url",
+    )
+    def update_expired_borrowing_session_url_and_sesion_id(self, request, pk=None):
+        """Endpoint for updating session url & session id in borrowing payment info"""
+        borrowing = self.get_object()
+        payment = Payment.objects.get(borrowing=borrowing, type="Payment")
+        session = stripe.checkout.Session.retrieve(payment.session_id)
+
+        if session.status == "expired" and payment.type == "Payment":
+            new_session_for_borrowing = create_stripe_session_and_payment(
+                borrowing=borrowing, request=self.request, payment_type="Payment"
+            )
+            payment.session_id = new_session_for_borrowing.id
+            payment.session_url = new_session_for_borrowing.url
+            payment.save()
+            return Response({"status": "Session url has been updated"})
+        return Response({"status": "Session url is still active"})
