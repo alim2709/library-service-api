@@ -1,5 +1,6 @@
 import stripe
 from django.conf import settings
+from django.db.models import Q
 from rest_framework.request import Request
 from rest_framework.reverse import reverse
 
@@ -24,7 +25,7 @@ def create_payment(
     )
 
 
-def create_stripe_session(
+def create_stripe_session_and_payment(
     borrowing: Borrowing, request: Request, payment_type: str, overdue_days: int = None
 ):
     book = borrowing.book
@@ -58,5 +59,6 @@ def create_stripe_session(
         success_url=success_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url=cancel_url + "?session_id={CHECKOUT_SESSION_ID}",
     )
-    create_payment(borrowing, session, payment_type)
+    if not Payment.objects.filter(Q(borrowing=borrowing) & Q(type=payment_type)):
+        create_payment(borrowing, session, payment_type)
     return session
