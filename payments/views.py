@@ -1,12 +1,14 @@
 import stripe
-from rest_framework.decorators import api_view, action
+from rest_framework.decorators import action
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import mixins, status
 from rest_framework.viewsets import GenericViewSet
 
+from borrowings.notifications import send_telegram_notification
 from payments.models import Payment
 from payments.serializers import PaymentSerializer, PaymentDetailSerializer
+from payments.utils import get_payment_info
 
 
 class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
@@ -30,7 +32,10 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            message = "Payment has been made successfully\n" + get_payment_info(payment)
+            send_telegram_notification(message)
             return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=["GET"], detail=False, url_path="payment_cancel")
     def payment_cancel(self, request: Request):
