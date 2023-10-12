@@ -33,7 +33,3 @@ def borrowing_overdue_send_message(queryset: QuerySet):
         send_telegram_notification(
             "Borrowing overdue:\n" + get_borrowing_info(borrowing)
         )
-
-
-def daily_borrowings_overdue_notification():
-    borrowing_overdue_send_message(check_borrowings_overdue())
