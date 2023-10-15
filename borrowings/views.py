@@ -1,9 +1,8 @@
 from datetime import datetime
-
-import stripe
 from django.db import transaction
 from rest_framework import mixins
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 
@@ -26,6 +25,7 @@ class BorrowingViewSet(
 ):
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -107,14 +107,14 @@ class BorrowingViewSet(
         """Endpoint for updating session url & session id in borrowing payment info"""
         borrowing = self.get_object()
         payment = Payment.objects.get(borrowing=borrowing, type="Payment")
-        session = stripe.checkout.Session.retrieve(payment.session_id)
-
-        if session.status == "expired" and payment.type == "Payment":
+        if payment.status == "Expired":
             new_session_for_borrowing = create_stripe_session_and_payment(
                 borrowing=borrowing, request=self.request, payment_type="Payment"
             )
+            payment.status = "Pending"
             payment.session_id = new_session_for_borrowing.id
             payment.session_url = new_session_for_borrowing.url
             payment.save()
             return Response({"status": "Session url has been updated"})
+
         return Response({"status": "Session url is still active"})
