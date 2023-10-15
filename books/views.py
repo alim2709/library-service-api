@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets
 from rest_framework.permissions import IsAdminUser, AllowAny
 
@@ -15,3 +14,8 @@ class BookViewSet(viewsets.ModelViewSet):
         if self.action == "list":
             return BookListSerializer
         return BookSerializer
+
+    def get_permissions(self):
+        if self.action == "list":
+            return [AllowAny()]
+        return super().get_permissions()
