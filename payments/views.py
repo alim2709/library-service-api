@@ -1,5 +1,6 @@
 import stripe
 from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import mixins, status
@@ -14,11 +15,19 @@ from payments.utils import get_payment_info
 class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
+    permission_classes = (IsAuthenticated,)
 
     def get_serializer_class(self):
         if self.action == "retrieve":
             return PaymentDetailSerializer
         return PaymentSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        user = self.request.user
+        if not user.is_staff:
+            queryset = queryset.filter(borrowing__user=user)
+        return queryset
 
     @action(methods=["GET"], detail=False, url_path="payment_success")
     def payment_success(self, request: Request):
