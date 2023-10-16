@@ -37,7 +37,13 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
             queryset = queryset.filter(borrowing__user=user)
         return queryset
 
-    @action(methods=["GET"], detail=False, url_path="payment_success")
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="payment_success",
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+    )
     def payment_success(self, request: Request):
         """Endpoint for successful stripe payment session"""
         session_id = request.query_params.get("session_id")
@@ -54,7 +60,13 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=["GET"], detail=False, url_path="payment_cancel")
+    @action(
+        methods=["GET"],
+        detail=False,
+        url_path="payment_cancel",
+        permission_classes=[AllowAny],
+        authentication_classes=[],
+    )
     def payment_cancel(self, request: Request):
         """Endpoint for canceled stripe payment session"""
         session_id = request.query_params.get("session_id")
