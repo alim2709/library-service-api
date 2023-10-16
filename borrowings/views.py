@@ -1,4 +1,6 @@
 from datetime import datetime
+
+import rest_framework_simplejwt.authentication
 from django.db import transaction
 from rest_framework import mixins
 from rest_framework.decorators import action
@@ -26,6 +28,9 @@ class BorrowingViewSet(
     queryset = Borrowing.objects.all()
     serializer_class = BorrowingSerializer
     permission_classes = (IsAuthenticated,)
+    authentication_classes = (
+        rest_framework_simplejwt.authentication.JWTAuthentication,
+    )
 
     def get_serializer_class(self):
         if self.action == "create":
