@@ -153,9 +153,6 @@ CELERY_TASK_TIME_LIMIT = 30 * 60
 
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
     "PAGE_SIZE": 6,
 }
@@ -164,5 +161,5 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),  # default 5 minutes
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),  # default 1 day
     "ROTATE_REFRESH_TOKENS": True,  # will return also new refresh token
-    "BLACKLIST_AFTER_ROTATION": True,
+    "BLACKLIST_AFTER_ROTATION": False,
 }
