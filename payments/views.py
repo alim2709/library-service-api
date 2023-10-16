@@ -15,7 +15,9 @@ from payments.utils import get_payment_info
 class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
     queryset = Payment.objects.all()
     serializer_class = PaymentSerializer
-    permission_classes = (IsAuthenticated,)
+    authentication_classes = (
+        rest_framework_simplejwt.authentication.JWTAuthentication,
+    )
 
     def get_serializer_class(self):
         if self.action == "retrieve":
