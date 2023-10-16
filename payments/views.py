@@ -1,6 +1,7 @@
 import stripe
+import rest_framework_simplejwt.authentication
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import mixins, status
@@ -23,6 +24,11 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
         if self.action == "retrieve":
             return PaymentDetailSerializer
         return PaymentSerializer
+
+    def get_permissions(self):
+        if self.action in ("list", "retrieve"):
+            return [IsAuthenticated()]
+        return super().get_permissions()
 
     def get_queryset(self):
         queryset = self.queryset
