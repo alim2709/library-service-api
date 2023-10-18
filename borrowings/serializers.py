@@ -30,10 +30,15 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         data = super(BorrowingCreateSerializer, self).validate(attrs)
         book = attrs["book"]
+        expected_return_date = attrs["expected_return_date"]
         user = self.context["request"].user
         pending_payments = Payment.objects.filter(borrowing__user=user).filter(
             status="Pending"
         )
+        if expected_return_date < datetime.datetime.now().date():
+            raise ValidationError(
+                detail="You can't put expected return date in the past!!!"
+            )
         if pending_payments:
             raise ValidationError(
                 detail="You have one or more pending payments. You can't make borrowings until you pay for them."
