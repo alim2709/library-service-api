@@ -1,3 +1,4 @@
+import datetime
 from django.db import transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
@@ -66,7 +67,7 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
 
 
 class BorrowingDetailSerializer(BorrowingCreateSerializer):
-    user = serializers.StringRelatedField(many=False, read_only=True)
+    user = serializers.SlugRelatedField(many=False, read_only=True, slug_field="email")
     book = serializers.StringRelatedField(many=False, read_only=True)
     payments = serializers.StringRelatedField(many=True, read_only=True)
 
