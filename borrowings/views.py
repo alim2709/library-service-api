@@ -47,7 +47,9 @@ class BorrowingViewSet(
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ("list", "retrieve") and not self.request.user.is_superuser:
-            queryset = queryset.filter(user=self.request.user)
+            queryset = queryset.filter(user=self.request.user).select_related(
+                "book_id", "user_email"
+            )
 
         """Filtering by user and is active borrowing"""
         user = self.request.query_params.get("user")
