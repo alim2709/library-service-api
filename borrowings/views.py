@@ -48,13 +48,13 @@ class BorrowingViewSet(
         queryset = self.queryset
         if self.action in ("list", "retrieve") and not self.request.user.is_superuser:
             queryset = queryset.filter(user=self.request.user).select_related(
-                "book_id", "user_email"
+                "book", "user"
             )
 
         """Filtering by user and is active borrowing"""
         user = self.request.query_params.get("user")
         is_active = self.request.query_params.get("is_active")
-        if user:
+        if user and self.request.user.is_staff:
             user_id = self._params_to_ints(user)
             queryset = queryset.filter(user_id__in=user_id)
         if is_active and is_active == "True":
@@ -63,6 +63,14 @@ class BorrowingViewSet(
             queryset = queryset.filter(actual_return_date__isnull=False)
 
         return queryset
+
+    def get_serializer_context(self) -> dict:
+        context = super().get_serializer_context()
+
+        if self.action == "create":
+            context["request"] = self.request
+
+        return context
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
