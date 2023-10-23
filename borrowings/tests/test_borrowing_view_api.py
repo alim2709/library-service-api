@@ -1,5 +1,5 @@
 import decimal
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
@@ -131,10 +131,9 @@ class AuthenticatedBorrowingApiTests(TestCase):
             "Borrowing has been already returned.",
         )
 
-    # @patch(
-    #     "borrowings.views.BorrowingViewSet.borrowing_return.create_stripe_session_and_payment"
-    # )
-    def test_borrowing_return_overdue(self):
+    @patch("borrowings.views.create_stripe_session_and_payment")
+    def test_borrowing_return_overdue(self, mock_data):
+        mock_data.return_value = MagicMock(url="testtest")
         borrowing = Borrowing.objects.create(
             expected_return_date=datetime.now().date() - timedelta(days=2),
             book=self.book,
