@@ -25,7 +25,7 @@ def detail_url(borrowing_id):
     return reverse("borrowings:borrowing-detail", args=[borrowing_id])
 
 
-class UnauthenticatedBooksApiTests(TestCase):
+class UnauthenticatedBorrowingsApiTests(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
 
@@ -34,7 +34,7 @@ class UnauthenticatedBooksApiTests(TestCase):
         self.assertEquals(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class AuthenticatedBookApiTests(TestCase):
+class AuthenticatedBorrowingApiTests(TestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
@@ -162,6 +162,120 @@ class AuthenticatedBookApiTests(TestCase):
         url = detail_url(self.borrowing.id) + "update_session_url/"
 
         response = self.client.post(url)
+        response2 = self.client.post(url)
 
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertEquals(response.data["status"], "Session url has been updated")
+        self.assertEquals(response2.data["status"], "Session url is still active")
+
+    def test_filter_borrowings_is_active_true_or_false(self):
+        borrowing1 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user,
+        )
+        borrowing2 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            actual_return_date=datetime.now().date() + timedelta(days=8),
+            book=self.book,
+            user=self.user,
+        )
+        borrowing3 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            actual_return_date=datetime.now().date() + timedelta(days=7),
+            book=self.book,
+            user=self.user,
+        )
+        borrowing4 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user,
+        )
+
+        response1 = self.client.get(BORROWING_URL, data={"is_active": "True"})
+        response2 = self.client.get(BORROWING_URL, data={"is_active": "False"})
+
+        serializer1 = BorrowingSerializer(borrowing1)
+        serializer2 = BorrowingSerializer(borrowing2)
+        serializer3 = BorrowingSerializer(borrowing3)
+        serializer4 = BorrowingSerializer(borrowing4)
+
+        self.assertIn(serializer1.data, response1.data["results"])
+        self.assertIn(serializer4.data, response1.data["results"])
+        self.assertIn(serializer3.data, response2.data["results"])
+        self.assertIn(serializer2.data, response2.data["results"])
+
+
+class AdminBorrowingApiTests(TestCase):
+    def setUp(self) -> None:
+        self.client = APIClient()
+        self.user = get_user_model().objects.create_user(
+            "admin@admin.com", "testpass", is_staff=True
+        )
+        self.user2 = get_user_model().objects.create_user(
+            "testunique1@tests.com", "unique_password"
+        )
+        self.user3 = get_user_model().objects.create_user(
+            "testunique3@tests.com", "unique_password"
+        )
+        self.book = sample_book()
+        self.client.force_authenticate(self.user)
+
+    def test_list_all_borrowings(self):
+        borrowing1 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user2,
+        )
+        borrowing2 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user3,
+        )
+
+        response = self.client.get(BORROWING_URL)
+
+        borrowings = Borrowing.objects.all()
+
+        serializer = BorrowingSerializer(borrowings, many=True)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data["results"], serializer.data)
+
+    def test_borrowing_detail_another_user(self):
+        borrowing = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user3,
+        )
+
+        url = detail_url(borrowing.id)
+
+        response = self.client.get(url)
+
+        serializer = BorrowingDetailSerializer(borrowing)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.data, serializer.data)
+
+    def test_filter_borrowing_by_user_id(self):
+        borrowing1 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=9),
+            book=self.book,
+            user=self.user2,
+        )
+        borrowing2 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            book=self.book,
+            user=self.user3,
+        )
+        user = self.user3
+
+        response = self.client.get(BORROWING_URL, data={"user": f"{user.id}"})
+
+        serializer1 = BorrowingSerializer(borrowing1)
+        serializer2 = BorrowingSerializer(borrowing2)
+
+        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertIn(serializer2.data, response.data["results"])
+        self.assertNotIn(serializer1.data, response.data["results"])
