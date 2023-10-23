@@ -46,7 +46,7 @@ class BorrowingViewSet(
 
     def get_queryset(self):
         queryset = self.queryset
-        if self.action in ("list", "retrieve") and not self.request.user.is_superuser:
+        if self.action in ("list", "retrieve") and not self.request.user.is_staff:
             queryset = queryset.filter(user=self.request.user).select_related(
                 "book", "user"
             )
@@ -54,13 +54,23 @@ class BorrowingViewSet(
         """Filtering by user and is active borrowing"""
         user = self.request.query_params.get("user")
         is_active = self.request.query_params.get("is_active")
-        if user and self.request.user.is_staff:
-            user_id = self._params_to_ints(user)
-            queryset = queryset.filter(user_id__in=user_id)
-        if is_active and is_active == "True":
-            queryset = queryset.filter(actual_return_date__isnull=True)
-        if is_active and is_active == "False":
-            queryset = queryset.filter(actual_return_date__isnull=False)
+        if self.request.user.is_staff:
+            if user:
+                user_id = self._params_to_ints(user)
+                queryset = queryset.filter(user_id__in=user_id)
+            if is_active and is_active.lower() == "true":
+                queryset = queryset.filter(actual_return_date__isnull=True)
+            if is_active and is_active.lower() == "false":
+                queryset = queryset.filter(actual_return_date__isnull=False)
+        if not self.request.user.is_staff:
+            if is_active and is_active.lower() == "true":
+                queryset = queryset.filter(
+                    actual_return_date__isnull=True, user=self.request.user
+                )
+            if is_active and is_active.lower() == "false":
+                queryset = queryset.filter(
+                    actual_return_date__isnull=False, user=self.request.user
+                )
 
         return queryset
 
