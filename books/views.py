@@ -7,6 +7,8 @@ from books.serializers import BookSerializer, BookListSerializer
 
 
 class BookViewSet(viewsets.ModelViewSet):
+    """Endpoint for CRUD operations with book"""
+
     queryset = Book.objects.all()
     serializer_class = BookSerializer
     permission_classes = (IsAdminUser,)

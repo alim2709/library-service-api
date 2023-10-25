@@ -2,6 +2,7 @@ from datetime import datetime
 
 import rest_framework_simplejwt.authentication
 from django.db import transaction
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import mixins
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -100,6 +101,7 @@ class BorrowingViewSet(
         serializer_class=BorrowingReturnSerializer,
     )
     def borrowing_return(self, request, pk=None):
+        """Endpoint for returning borrowing book"""
         borrowing = self.get_object()
         book = borrowing.book
         actual_return_date = datetime.now().date()
@@ -150,3 +152,20 @@ class BorrowingViewSet(
             return Response({"status": "Session url has been updated"})
 
         return Response({"status": "Session url is still active"})
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "user",
+                type={"type": "list", "items": {"type": "number"}},
+                description="Filter by users  (ex. ?user=1,2)",
+            ),
+            OpenApiParameter(
+                "destination",
+                type={"type": "string"},
+                description="Filter by is_active borrowing  (ex. ?is_active=True)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
