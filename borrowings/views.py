@@ -44,6 +44,14 @@ class BorrowingViewSet(
         """Converts a list of string IDs to a list of integers"""
         return [int(str_id) for str_id in qs.split(",")]
 
+    @staticmethod
+    def _params_to_bool(qs: str) -> bool:
+        """Converts a str to bool True or False"""
+        # if qs:
+        if qs.lower() == "true":
+            return True
+        return False
+
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ("list", "retrieve") and not self.request.user.is_staff:
@@ -58,20 +66,19 @@ class BorrowingViewSet(
             if user:
                 user_id = self._params_to_ints(user)
                 queryset = queryset.filter(user_id__in=user_id)
-            if is_active and is_active.lower() == "true":
+            if is_active and self._params_to_bool(is_active):
                 queryset = queryset.filter(actual_return_date__isnull=True)
-            if is_active and is_active.lower() == "false":
+            if is_active and not self._params_to_bool(is_active):
                 queryset = queryset.filter(actual_return_date__isnull=False)
-        if not self.request.user.is_staff:
-            if is_active and is_active.lower() == "true":
+        if not self.request.user.is_staff and is_active:
+            if self._params_to_bool(is_active):
                 queryset = queryset.filter(
                     actual_return_date__isnull=True, user=self.request.user
                 )
-            if is_active and is_active.lower() == "false":
+            else:
                 queryset = queryset.filter(
                     actual_return_date__isnull=False, user=self.request.user
                 )
-
         return queryset
 
     def get_serializer_context(self) -> dict:
