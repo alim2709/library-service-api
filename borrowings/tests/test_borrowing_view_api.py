@@ -278,3 +278,51 @@ class AdminBorrowingApiTests(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
         self.assertIn(serializer2.data, response.data["results"])
         self.assertNotIn(serializer1.data, response.data["results"])
+
+    def test_filter_borrowings_is_active_true_or_false(self):
+        borrowing1 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=9),
+            book=self.book,
+            user=self.user2,
+        )
+        borrowing2 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            actual_return_date=datetime.now().date() + timedelta(days=7),
+            book=self.book,
+            user=self.user2,
+        )
+        borrowing3 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=10),
+            actual_return_date=datetime.now().date() + timedelta(days=8),
+            book=self.book,
+            user=self.user3,
+        )
+        borrowing4 = Borrowing.objects.create(
+            expected_return_date=datetime.now().date() + timedelta(days=9),
+            book=self.book,
+            user=self.user3,
+        )
+
+        response1 = self.client.get(BORROWING_URL, data={"is_active": "True"})
+        response2 = self.client.get(BORROWING_URL, data={"is_active": "False"})
+
+        borrowings_active_true = Borrowing.objects.filter(
+            actual_return_date__isnull=True
+        )
+        borrowings_active_false = Borrowing.objects.filter(
+            actual_return_date__isnull=False
+        )
+
+        serializer_active_true_borrowings = BorrowingSerializer(
+            borrowings_active_true, many=True
+        )
+        serializer_active_false_borrowings = BorrowingSerializer(
+            borrowings_active_false, many=True
+        )
+
+        self.assertEquals(
+            response1.data["results"], serializer_active_true_borrowings.data
+        )
+        self.assertEquals(
+            response2.data["results"], serializer_active_false_borrowings.data
+        )
