@@ -25,7 +25,7 @@ class BorrowingViewSet(
     mixins.RetrieveModelMixin,
     GenericViewSet,
 ):
-    queryset = Borrowing.objects.all()
+    queryset = Borrowing.objects.all().select_related("book", "user")
     serializer_class = BorrowingSerializer
     permission_classes = (IsAuthenticated,)
     authentication_classes = (
@@ -55,14 +55,13 @@ class BorrowingViewSet(
     def get_queryset(self):
         queryset = self.queryset
         if self.action in ("list", "retrieve") and not self.request.user.is_staff:
-            queryset = queryset.filter(user=self.request.user).select_related(
-                "book", "user"
-            )
+            queryset = queryset.filter(user=self.request.user)
 
         """Filtering by user and is active borrowing"""
         user = self.request.query_params.get("user")
         is_active = self.request.query_params.get("is_active")
         if self.request.user.is_staff:
+            """Filtering for admin users"""
             if user:
                 user_id = self._params_to_ints(user)
                 queryset = queryset.filter(user_id__in=user_id)
@@ -71,6 +70,7 @@ class BorrowingViewSet(
             if is_active and not self._params_to_bool(is_active):
                 queryset = queryset.filter(actual_return_date__isnull=False)
         if not self.request.user.is_staff and is_active:
+            """Filtering for non-admin users"""
             if self._params_to_bool(is_active):
                 queryset = queryset.filter(
                     actual_return_date__isnull=True, user=self.request.user

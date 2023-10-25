@@ -14,7 +14,7 @@ from payments.utils import get_payment_info
 
 
 class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericViewSet):
-    queryset = Payment.objects.all()
+    queryset = Payment.objects.all().select_related("borrowing__user")
     serializer_class = PaymentSerializer
     authentication_classes = (
         rest_framework_simplejwt.authentication.JWTAuthentication,
