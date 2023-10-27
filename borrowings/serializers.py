@@ -30,25 +30,29 @@ class BorrowingCreateSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         data = super(BorrowingCreateSerializer, self).validate(attrs)
-        book = attrs["book"]
-        expected_return_date = attrs["expected_return_date"]
         user = self.context["request"].user
         pending_payments = Payment.objects.filter(borrowing__user=user).filter(
             status="Pending"
         )
-        if expected_return_date < datetime.datetime.now().date():
-            raise ValidationError(
-                detail="You can't put expected return date in the past!!!"
-            )
         if pending_payments:
             raise ValidationError(
                 detail="You have one or more pending payments. You can't make borrowings until you pay for them."
             )
-        if book.inventory == 0:
-            raise serializers.ValidationError(
-                {"book_inventory": f"{book.title} out of stock at this moment"}
-            )
         return data
+
+    def validate_expected_return_date(self, value):
+        if value < datetime.datetime.now().date():
+            raise ValidationError(
+                detail="You can't put expected return date in the past!!!"
+            )
+        return value
+
+    def validate_book(self, value):
+        if value.inventory == 0:
+            raise serializers.ValidationError(
+                {"book_inventory": f"{value.title} out of stock at this moment"}
+            )
+        return value
 
     @transaction.atomic()
     def create(self, validated_data):
