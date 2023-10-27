@@ -20,4 +20,4 @@ def get_chat_id(bot_token):
 
 
 if __name__ == "__main__":
-    print((get_chat_id(settings.TELEGRAM_BOT_TOKEN)))
+    print(get_chat_id(settings.TELEGRAM_BOT_TOKEN))
