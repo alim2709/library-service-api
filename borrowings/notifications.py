@@ -4,7 +4,7 @@ from rest_framework.response import Response
 
 TELEGRAM_BOT_TOKEN = settings.TELEGRAM_BOT_TOKEN
 TELEGRAM_CHAT_ID = settings.TELEGRAM_CHAT_ID
-URL = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+URL = settings.URL_NOTIFICATION
 
 
 def send_telegram_notification(message: str) -> Response:

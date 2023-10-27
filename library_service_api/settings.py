@@ -88,12 +88,6 @@ INTERNAL_IPS = [
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
 
 DATABASES = {
     "default": {
@@ -188,3 +182,5 @@ SPECTACULAR_SETTINGS = {
         "defaultModelExpandDepth": 2,
     },
 }
+
+URL_NOTIFICATION = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
