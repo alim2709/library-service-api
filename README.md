@@ -29,7 +29,7 @@ docker-compose up
 * get access token via /api/user/token/
 
 
-A telegram bot has already been created for this application - https://t.me/mate_academy12345_bot 
+A telegram bot has already been created for this application - https://t.me/alim_testing_bot
 1. Write any message in bot
 2. To retrieve chat_id use script `teleram-script.py`.
 3. Add to env variables `chat_id` retrieved by script, to test functionality.
