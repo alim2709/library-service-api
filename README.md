@@ -62,7 +62,7 @@ python manage.py runserver
 ```shell
     docker run -d -p 6379:6379 redis
 ```
-* Go to admin panel & create periodic task with on of registered tasks
+* Go to admin panel & create periodic task with one of registered tasks
 * Open the terminal & run `celery -A library_service_api worker -l info`
 * Then open separately terminal & run `celery -A library_service_api beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler`
 
