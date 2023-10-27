@@ -4,9 +4,8 @@ from unittest.mock import patch, MagicMock
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from books.tests.test_book_api import sample_book
 from borrowings.models import Borrowing
@@ -23,7 +22,7 @@ def detail_url(payment_id):
     return reverse("payments:payment-detail", args=[payment_id])
 
 
-class UnauthenticatedPaymentApiTests(TestCase):
+class UnauthenticatedPaymentApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
 
@@ -32,7 +31,7 @@ class UnauthenticatedPaymentApiTests(TestCase):
         self.assertEquals(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class AuthenticatedPaymentApiTests(TestCase):
+class AuthenticatedPaymentApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
@@ -136,7 +135,7 @@ class AuthenticatedPaymentApiTests(TestCase):
         )
 
 
-class AdminPaymentApiTests(TestCase):
+class AdminPaymentApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(

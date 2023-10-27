@@ -2,9 +2,8 @@ import decimal
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 
 from books.models import Book
 from books.serializers import BookListSerializer, BookSerializer
@@ -28,7 +27,7 @@ def detail_url(book_id):
     return reverse("books:book-detail", args=[book_id])
 
 
-class UnauthenticatedBooksApiTests(TestCase):
+class UnauthenticatedBooksApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.book = sample_book()
@@ -58,7 +57,7 @@ class UnauthenticatedBooksApiTests(TestCase):
         self.assertEquals(response.status_code, status.HTTP_200_OK)
 
 
-class AuthenticatedBookApiTests(TestCase):
+class AuthenticatedBookApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
@@ -126,7 +125,7 @@ class AuthenticatedBookApiTests(TestCase):
         self.assertEquals(res.status_code, status.HTTP_403_FORBIDDEN)
 
 
-class AdminBookApiTests(TestCase):
+class AdminBookApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(

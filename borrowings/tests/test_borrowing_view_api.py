@@ -4,10 +4,8 @@ from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
-from django.test import TestCase
 from rest_framework import status
-from rest_framework.test import APIClient
-
+from rest_framework.test import APIClient, APITestCase
 
 from books.models import Book
 from books.tests.test_book_api import sample_book
@@ -25,7 +23,7 @@ def detail_url(borrowing_id):
     return reverse("borrowings:borrowing-detail", args=[borrowing_id])
 
 
-class UnauthenticatedBorrowingsApiTests(TestCase):
+class UnauthenticatedBorrowingsApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
 
@@ -34,7 +32,7 @@ class UnauthenticatedBorrowingsApiTests(TestCase):
         self.assertEquals(res.status_code, status.HTTP_401_UNAUTHORIZED)
 
 
-class AuthenticatedBorrowingApiTests(TestCase):
+class AuthenticatedBorrowingApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
@@ -205,7 +203,7 @@ class AuthenticatedBorrowingApiTests(TestCase):
         self.assertIn(serializer2.data, response2.data["results"])
 
 
-class AdminBorrowingApiTests(TestCase):
+class AdminBorrowingApiTests(APITestCase):
     def setUp(self) -> None:
         self.client = APIClient()
         self.user = get_user_model().objects.create_user(
