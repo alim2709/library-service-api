@@ -95,7 +95,7 @@ class AuthenticatedPaymentApiTests(APITestCase):
         self.assertEquals(response_own.data, serializer_own.data)
         self.assertEquals(response_another_user.status_code, status.HTTP_404_NOT_FOUND)
 
-    @patch("payments.views.send_telegram_notification")
+    @patch("payments.serializers.send_telegram_notification")
     @patch("payments.views.stripe.checkout.Session.retrieve")
     def test_payment_success(
         self,

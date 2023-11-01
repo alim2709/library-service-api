@@ -117,7 +117,7 @@ class AuthenticatedBorrowingApiTests(APITestCase):
     def test_borrowing_return(self):
         borrowing = self.borrowing
 
-        url = detail_url(borrowing.id) + "borrowing_return/"
+        url = detail_url(borrowing.id) + "return/"
 
         response = self.client.post(url)
         response2 = self.client.post(url)
@@ -129,7 +129,7 @@ class AuthenticatedBorrowingApiTests(APITestCase):
             "Borrowing has been already returned.",
         )
 
-    @patch("borrowings.views.create_stripe_session_and_payment")
+    @patch("borrowings.serializers.create_stripe_session_and_payment")
     def test_borrowing_return_overdue(self, mock_data):
         mock_data.return_value = MagicMock(url="testtest")
         borrowing = Borrowing.objects.create(
@@ -138,13 +138,13 @@ class AuthenticatedBorrowingApiTests(APITestCase):
             user=self.user,
         )
 
-        url = detail_url(borrowing.id) + "borrowing_return/"
+        url = detail_url(borrowing.id) + "return/"
 
         response = self.client.post(url)
 
-        self.assertEquals(response.status_code, status.HTTP_200_OK)
+        self.assertEquals(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEquals(
-            response.data["message"],
+            response.data["message"][0],
             "Your return is overdue please provide Fine payment",
         )
 
