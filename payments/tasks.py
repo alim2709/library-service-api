@@ -17,10 +17,9 @@ def get_pending_payments() -> QuerySet:
 @shared_task
 def track_expire_stripe_sessions() -> None:
     pending_payments = get_pending_payments()
-    if pending_payments:
-        for payment in pending_payments:
-            session_id = payment.session_id
-            session = stripe.checkout.Session.retrieve(session_id)
-            if session.status == "expired":
-                payment.status = "Expired"
-                payment.save()
+    for payment in pending_payments:
+        session_id = payment.session_id
+        session = stripe.checkout.Session.retrieve(session_id)
+        if session.status == "expired":
+            payment.status = "Expired"
+            payment.save()
