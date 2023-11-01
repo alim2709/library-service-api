@@ -1,30 +1,12 @@
-from django.urls import path
+from rest_framework import routers
 
 from payments.views import (
     PaymentViewSet,
 )
 
-urlpatterns = [
-    path(
-        "",
-        PaymentViewSet.as_view(actions={"get": "list"}),
-        name="payment-list",
-    ),
-    path(
-        "<int:pk>/",
-        PaymentViewSet.as_view(actions={"get": "retrieve"}),
-        name="payment-detail",
-    ),
-    path(
-        "success/",
-        PaymentViewSet.as_view(actions={"get": "payment_success"}),
-        name="payment-success",
-    ),
-    path(
-        "cansel/",
-        PaymentViewSet.as_view(actions={"get": "payment_cancel"}),
-        name="payment-cancel",
-    ),
-]
+router = routers.DefaultRouter()
+router.register("", PaymentViewSet)
+
+urlpatterns = router.urls
 
 app_name = "payments"
