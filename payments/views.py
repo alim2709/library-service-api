@@ -41,6 +41,7 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
         methods=["GET"],
         detail=False,
         url_path="payment_success",
+        url_name="success",
         permission_classes=[AllowAny],
         authentication_classes=[],
     )
@@ -55,8 +56,6 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
             )
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            message = "Payment has been made successfully\n" + get_payment_info(payment)
-            send_telegram_notification(message)
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -64,6 +63,7 @@ class PaymentViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin, GenericVi
         methods=["GET"],
         detail=False,
         url_path="payment_cancel",
+        url_name="cancel",
         permission_classes=[AllowAny],
         authentication_classes=[],
     )
