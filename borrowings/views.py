@@ -3,7 +3,7 @@ from datetime import datetime
 import rest_framework_simplejwt.authentication
 from django.db import transaction
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import mixins
+from rest_framework import mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
@@ -40,6 +40,14 @@ class BorrowingViewSet(
             return BorrowingDetailSerializer
         return BorrowingSerializer
 
+    def get_serializer_context(self) -> dict:
+        context = super().get_serializer_context()
+
+        if self.action == "borrowing_return":
+            context["request"] = self.request
+
+        return context
+
     @staticmethod
     def _params_to_ints(qs):
         """Converts a list of string IDs to a list of integers"""
@@ -48,10 +56,7 @@ class BorrowingViewSet(
     @staticmethod
     def _params_to_bool(qs: str) -> bool:
         """Converts a str to bool True or False"""
-        # if qs:
-        if qs.lower() == "true":
-            return True
-        return False
+        return qs.lower() == "true"
 
     def get_queryset(self):
         queryset = self.queryset
@@ -82,14 +87,6 @@ class BorrowingViewSet(
                 )
         return queryset
 
-    def get_serializer_context(self) -> dict:
-        context = super().get_serializer_context()
-
-        if self.action == "create":
-            context["request"] = self.request
-
-        return context
-
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
@@ -97,7 +94,7 @@ class BorrowingViewSet(
     @action(
         methods=["POST"],
         detail=True,
-        url_path="borrowing_return",
+        url_path="return",
         serializer_class=BorrowingReturnSerializer,
     )
     def borrowing_return(self, request, pk=None):
@@ -105,30 +102,15 @@ class BorrowingViewSet(
         borrowing = self.get_object()
         book = borrowing.book
         actual_return_date = datetime.now().date()
-        expected_return_date = borrowing.expected_return_date
 
         serializer_update = BorrowingReturnSerializer(
             borrowing,
+            context={"request": self.request},
             data={"actual_return_date": actual_return_date},
             partial=True,
         )
         serializer_update.is_valid(raise_exception=True)
         serializer_update.save()
-        book.inventory += 1
-        book.save()
-        if actual_return_date > expected_return_date:
-            overdue_period = (actual_return_date - borrowing.expected_return_date).days
-            session = create_stripe_session_and_payment(
-                borrowing,
-                self.request,
-                payment_type="Fine",
-                overdue_days=overdue_period,
-            )
-            info = {
-                "message": "Your return is overdue please provide Fine payment",
-                "payment_url": session.url,
-            }
-            return Response(info)
         return Response({"status": "borrowing returned"})
 
     @transaction.atomic
